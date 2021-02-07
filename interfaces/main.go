@@ -11,11 +11,13 @@ type spanishBot struct {
 }
 
 func (eb *englishBot) getGreeting() string {
+	// VERY custom logic for generating an english greeting
 	return "Hello " + eb.name + "!"
 }
 
 func (sb *spanishBot) getGreeting() string {
-	return "Hello " + sb.name + "!"
+	// VERY custom logic for generating an spanish greeting
+	return "Hola " + sb.name + "!"
 }
 
 func ebPrintGreeting(eb englishBot) {
