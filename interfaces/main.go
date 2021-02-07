@@ -5,11 +5,19 @@ import "fmt"
 type bot interface {
 	getGreeting() string
 }
-type englishBot struct {
-}
 
-type spanishBot struct {
-}
+// type user struct {
+// 	name string
+// }
+
+// type botnew interface {
+// 	getGreeting(string, int) (string, error)
+// 	getBotVersion() float64
+// 	respondToUser(user) string
+// }
+
+type englishBot struct{}
+type spanishBot struct{}
 
 func main() {
 	eb := englishBot{}
