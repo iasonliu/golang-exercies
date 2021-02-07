@@ -28,8 +28,7 @@ func main() {
 	// Turn `address` into `value` with `*address`
 	// Turn `vaule` into `address` with `&vaule`
 
-	jimPointer := &jim
-	jimPointer.updateName("Tom")
+	jim.updateName("Tom")
 	jim.print()
 }
 
