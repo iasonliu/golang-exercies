@@ -18,7 +18,11 @@ func main() {
 	// colors["white"] = "#ffffff"
 	// delete key from map
 	// delete(colors, "red")
-	for k, v := range colors {
+	printMap(colors)
+}
+
+func printMap(c map[string]string) {
+	for k, v := range c {
 		fmt.Printf("key is %v, vaule is %v \n", k, v)
 	}
 }
