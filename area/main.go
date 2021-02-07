@@ -23,12 +23,12 @@ func (tr triangle) getArea() float64 {
 }
 
 func main() {
-	sq := square{sideLength: 10.0}
+	sq := square{sideLength: 5.7}
 	printArea(sq)
-	tr := triangle{height: 10, base: 21.0}
+	tr := triangle{height: 1.5, base: 2.5}
 	printArea(tr)
 }
 
 func printArea(s shape) {
-	fmt.Println(s.getArea())
+	fmt.Printf("Are of %+v is: %v \n", s, s.getArea())
 }
