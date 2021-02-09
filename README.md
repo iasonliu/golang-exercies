@@ -1,1 +1,1 @@
-leanning golang
+# Golang exercies

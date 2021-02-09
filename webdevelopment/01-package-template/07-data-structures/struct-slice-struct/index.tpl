@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Peeps</title>
+</head>
+<body>
+<ul>
+    {{ range .Wisdom }}
+    <li>{{.Name}} -  {{.Motto}}</li>
+    {{end}}
+</ul>
+<ul>
+    {{ range .Transport }}
+        <li>{{.Manufacturer}} - {{.Model}} - {{.Doors}}</li>
+    {{end}}
+</ul>
+</body>
+</html>
