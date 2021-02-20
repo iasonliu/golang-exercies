@@ -3,6 +3,7 @@ package main
 import (
 	"html/template"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -16,14 +17,21 @@ type user struct {
 	Role     string
 }
 
+type session struct {
+	username     string
+	lastActivity time.Time
+}
+
 var tpl *template.Template
-var dbUsers = map[string]user{}      // user ID, user
-var dbSessions = map[string]string{} // session ID, user ID
+var dbUsers = map[string]user{} // user ID, user
+var dbSessions = map[string]session{}
+var dbSessionsCleaned time.Time
+
+const sessionLength int = 30
 
 func init() {
 	tpl = template.Must(template.ParseGlob("templates/*"))
-	bs, _ := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
-	dbUsers["test@test.com"] = user{"test@test.com", bs, "James", "Bond", "007"}
+	dbSessionsCleaned = time.Now()
 }
 
 func main() {
@@ -37,13 +45,14 @@ func main() {
 }
 
 func index(w http.ResponseWriter, req *http.Request) {
-	u := getUser(req)
+	u := getUser(w, req)
+	showSessions()
 	tpl.ExecuteTemplate(w, "index.tpl", u)
 }
 
 func bar(w http.ResponseWriter, req *http.Request) {
-	u := getUser(req)
-	if !isLogged(req) {
+	u := getUser(w, req)
+	if !isLogged(w, req) {
 		http.Redirect(w, req, "/", http.StatusSeeOther)
 		return
 	}
@@ -51,10 +60,11 @@ func bar(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "You must be 007 to enter the bar", http.StatusForbidden)
 		return
 	}
+	showSessions()
 	tpl.ExecuteTemplate(w, "bar.tpl", u)
 }
 func list(w http.ResponseWriter, req *http.Request) {
-	if isLogged(req) {
+	if isLogged(w, req) {
 		http.Redirect(w, req, "/", http.StatusSeeOther)
 		return
 	}
@@ -62,7 +72,7 @@ func list(w http.ResponseWriter, req *http.Request) {
 }
 
 func signup(w http.ResponseWriter, req *http.Request) {
-	if isLogged(req) {
+	if isLogged(w, req) {
 		http.Redirect(w, req, "/", http.StatusSeeOther)
 		return
 	}
@@ -90,7 +100,7 @@ func signup(w http.ResponseWriter, req *http.Request) {
 			Name:  "session",
 			Value: sID.String(),
 		})
-		dbSessions[sID.String()] = username
+		dbSessions[sID.String()] = session{username, time.Now()}
 
 		// store user in dbUsers
 		u := user{username, password, firstname, lastname, role}
@@ -99,11 +109,12 @@ func signup(w http.ResponseWriter, req *http.Request) {
 		http.Redirect(w, req, "/", http.StatusSeeOther)
 		return
 	}
+	showSessions()
 	tpl.ExecuteTemplate(w, "signup.tpl", nil)
 }
 
 func logout(w http.ResponseWriter, req *http.Request) {
-	if isLogged(req) {
+	if isLogged(w, req) {
 		// clearup cookie
 		c := &http.Cookie{
 			Name:   "session",
@@ -112,13 +123,15 @@ func logout(w http.ResponseWriter, req *http.Request) {
 		}
 		http.SetCookie(w, c)
 		// delete session id from DB
-		delete(dbSessions, c.Value)
+		if time.Now().Sub(dbSessionsCleaned) > (time.Second * 30) {
+			go cleanSessions()
+		}
 	}
 	http.Redirect(w, req, "/login", http.StatusSeeOther)
 }
 
 func login(w http.ResponseWriter, req *http.Request) {
-	if isLogged(req) {
+	if isLogged(w, req) {
 		http.Redirect(w, req, "/", http.StatusSeeOther)
 		return
 	}
@@ -145,9 +158,10 @@ func login(w http.ResponseWriter, req *http.Request) {
 			Value: sID.String(),
 		}
 		http.SetCookie(w, c)
-		dbSessions[c.Value] = un
+		dbSessions[c.Value] = session{un, time.Now()}
 		http.Redirect(w, req, "/", http.StatusSeeOther)
 		return
 	}
+	showSessions()
 	tpl.ExecuteTemplate(w, "login.tpl", nil)
 }
