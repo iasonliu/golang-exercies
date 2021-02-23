@@ -22,6 +22,8 @@ func init() {
 
 func main() {
 	http.HandleFunc("/", index)
+	// add route to serve pictures
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public/"))))
 	http.Handle("/favicon.ico", http.NotFoundHandler())
 	http.ListenAndServe(":8080", nil)
 }
@@ -50,10 +52,12 @@ func index(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
+		// add filename to this user's cookie
 		cookie = appendValue(w, cookie, uFilename)
 	}
 	data := strings.Split(cookie.Value, "|")
-	tpl.ExecuteTemplate(w, "index.tpl", data)
+	// sliced cookie values to only send over images
+	tpl.ExecuteTemplate(w, "index.tpl", data[1:])
 }
 
 // add func to get cookie

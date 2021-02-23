@@ -6,9 +6,9 @@
 </head>
 <body>
 
-<h1> COOKIE VALUES</h1>
+<h1> Your Pictures:</h1>
 {{range .}}
-<h2> {{.}} </h2>
+<img src="/public/pics/{{.}}" width="400px">
 {{end}}
 
 <form method="post" enctype="multipart/form-data">
