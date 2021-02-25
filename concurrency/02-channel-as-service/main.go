@@ -10,6 +10,7 @@ func main() {
 	joe := boring("Joe")
 	ann := boring("Ann")
 	for i := 0; i < 5; i++ {
+		// it will block with joe and ann
 		fmt.Printf("%q\n", <-joe)
 		fmt.Printf("%q\n", <-ann)
 	}
