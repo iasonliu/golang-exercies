@@ -1,16 +1,3 @@
-https://www.youtube.com/watch?v=f6kdp27TYZs
-https://talks.golang.org/2012/concurrency.slide
-
-# Channels
-A channel in Go provides a connection between two goroutines, allowing them to communicate.
-
-    // Declaring and initializing.
-    var c chan int
-    c = make(chan int)
-    // or
-    c := make(chan int)
-    // Sending on a channel.
-    c <- 1
-    // Receiving from a channel.
-    // The "arrow" indicates the direction of data flow.
-    value = <-c
+# Go Concurrency Patterns
+- [Google I/O 2012 - Go Concurrency Patterns](https://www.youtube.com/watch?v=f6kdp27TYZs)
+- [slide](https://talks.golang.org/2012/concurrency.slide)
