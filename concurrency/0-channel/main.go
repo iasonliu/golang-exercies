@@ -9,7 +9,7 @@ import (
 func main() {
 	c := make(chan string)
 	go boring("boring!", c)
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 15; i++ {
 		// Receive experssion is just a value
 		fmt.Printf("You say: %q\n", <-c)
 	}
