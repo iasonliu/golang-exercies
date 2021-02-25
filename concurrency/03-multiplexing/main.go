@@ -8,7 +8,7 @@ import (
 
 func main() {
 	c := fanIn(boring("Joe"), boring("Ann"))
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 15; i++ {
 		fmt.Printf("%q\n", <-c)
 	}
 	fmt.Println("You're both boring; I'm leaving.")
