@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -20,15 +21,15 @@ func getJWT(msg string) (string, error) {
 
 	claims := MyClaims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(5 * time.Microsecond).Unix(),
+			ExpiresAt: time.Now().Add(5 * time.Minute).Unix(),
 		},
 		Email: msg,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &claims)
-	ss, err := token.SignedString(mySigningKey)
+	ss, err := token.SignedString([]byte(mySigningKey))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("couldn't SignedString %w", err)
 	}
 	return ss, nil
 }
@@ -88,7 +89,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 		<meta charset="UTF-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>HMAC Example</title>
+		<title>JWT token Example</title>
 	</head>
 	<body>
 		<p> Cookie value: ` + c.Value + `</p>
