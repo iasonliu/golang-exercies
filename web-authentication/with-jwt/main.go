@@ -66,6 +66,9 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 	tokenString := c.Value
 	afterVerificationToken, err := jwt.ParseWithClaims(tokenString, &MyClaims{}, func(beforeVeritificationToken *jwt.Token) (interface{}, error) {
+		if beforeVeritificationToken.Method.Alg() == jwt.SigningMethodHS256.Alg() {
+			return nil, fmt.Errorf("SOMEONT TRIED TO HACK changed signing method")
+		}
 		return []byte(mySigningKey), nil
 	})
 	// StandardClaims has the Valid() error method
