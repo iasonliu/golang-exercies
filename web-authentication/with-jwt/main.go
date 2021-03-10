@@ -77,7 +77,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 	// Type Token which has a field VALID will be true
 
 	message := "Not logged in"
-	if afterVerificationToken.Valid && err == nil {
+	if err == nil && afterVerificationToken.Valid {
 		claims := afterVerificationToken.Claims.(*MyClaims)
 		log.Println(claims.Email, claims.ExpiresAt)
 		message = "Logged in"
