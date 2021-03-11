@@ -1,10 +1,14 @@
 package main
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,6 +22,17 @@ type Users []User
 
 var UserList Users
 
+const mySigningKey = "AllYOURBASEKey"
+
+const MyHMACkey = "my secret key 001 james bond rule the world"
+
+func main() {
+	http.HandleFunc("/", index)
+	http.HandleFunc("/register", register)
+	http.HandleFunc("/login", login)
+	http.ListenAndServe(":8080", nil)
+}
+
 func getUser(email string) (User, error) {
 	for _, u := range UserList {
 		if u.Email == email {
@@ -27,7 +42,7 @@ func getUser(email string) (User, error) {
 	return User{}, fmt.Errorf("User not Find")
 }
 
-func greet(w http.ResponseWriter, r *http.Request) {
+func index(w http.ResponseWriter, r *http.Request) {
 	errMsg := r.FormValue("errormsg")
 
 	html := `<!DOCTYPE html>
@@ -109,10 +124,30 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
-func main() {
 
-	http.HandleFunc("/", greet)
-	http.HandleFunc("/register", register)
-	http.HandleFunc("/login", login)
-	http.ListenAndServe(":8080", nil)
+func createToken(sessionId string) string {
+	mac := hmac.New(sha256.New, []byte(MyHMACkey))
+	mac.Write([]byte(sessionId))
+	// to hex
+	// signedMac := fmt.Sprintf("%x", mac.Sum(nil))
+	// to base64
+	signedMacBase64 := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+	return signedMacBase64 + "|" + sessionId
+}
+
+func paresToken(ss string) (string, error) {
+	xs := strings.SplitN(ss, "|", 2)
+	if len(xs) != 2 {
+		return "", fmt.Errorf("Session id not Signed")
+	}
+	signedMac, err := base64.StdEncoding.DecodeString(xs[0])
+	if err != nil {
+		return "", err
+	}
+	mac := hmac.New(sha256.New, []byte(MyHMACkey))
+	mac.Write([]byte(xs[1]))
+	if hmac.Equal([]byte(signedMac), mac.Sum(nil)) {
+		return xs[1], nil
+	}
+	return "", fmt.Errorf("Session id not Signed")
 }
