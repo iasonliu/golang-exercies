@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -94,7 +93,6 @@ func login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		u, err := getUser(userEmail)
-		log.Printf("%#v", u)
 		if err != nil {
 			errorMsg := url.QueryEscape("User Not find")
 			http.Redirect(w, r, "/?errormsg="+errorMsg, http.StatusSeeOther)
