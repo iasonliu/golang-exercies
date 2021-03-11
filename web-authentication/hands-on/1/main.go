@@ -6,10 +6,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,9 +24,9 @@ type Users []User
 
 var UserList Users
 
-const mySigningKey = "AllYOURBASEKey"
+var sessionList = map[string]string{}
 
-const MyHMACkey = "my secret key 001 james bond rule the world"
+var MyHMACkey = []byte("my secret key 001 james bond rule the world")
 
 func main() {
 	http.HandleFunc("/", index)
@@ -43,6 +45,21 @@ func getUser(email string) (User, error) {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("sessionID")
+	if err != nil {
+		cookie = &http.Cookie{
+			Name:  "sessionID",
+			Value: "",
+		}
+	}
+	sessionID, err := paresToken(cookie.Value)
+	if err != nil {
+		log.Println("Index parseToken" + err.Error())
+	}
+	var userEmail string
+	if sessionID != "" {
+		userEmail = sessionList[sessionID]
+	}
 	errMsg := r.FormValue("errormsg")
 
 	html := `<!DOCTYPE html>
@@ -55,6 +72,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 	</head>
 	<body>
 	<h1>IF THERE IS ANY ERROR: ` + errMsg + `</h1>
+	<h1>IF THERE IS ANY SESSION, YOUR EMAIL is: ` + userEmail + `</h1>
 	<div>
 	<h1> REGISTER </h1>
 	<form action="/register" method="post">
@@ -90,7 +108,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, errorMsg, http.StatusInternalServerError)
 		}
 		UserList = append(UserList, User{userEmail, hashPassword})
-		fmt.Fprintf(w, "%#v", UserList)
+		return
 	} else {
 		errorMsg := url.QueryEscape("Your method was not Post")
 		http.Redirect(w, r, "/?errormsg="+errorMsg, http.StatusSeeOther)
@@ -119,6 +137,20 @@ func login(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/?errormsg="+errorMsg, http.StatusSeeOther)
 			return
 		}
+
+		uuid, err := uuid.NewRandom()
+		if err != nil {
+			errorMsg := url.QueryEscape("UUID error")
+			http.Redirect(w, r, "/?errormsg="+errorMsg, http.StatusSeeOther)
+			return
+		}
+		sessionList[uuid.String()] = u.Email
+		token := createToken(uuid.String())
+		cookie := http.Cookie{
+			Name:  "sessionID",
+			Value: token,
+		}
+		http.SetCookie(w, &cookie)
 		fmt.Fprintf(w, "Login %s", u.Email)
 		return
 	}
@@ -126,7 +158,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func createToken(sessionId string) string {
-	mac := hmac.New(sha256.New, []byte(MyHMACkey))
+	mac := hmac.New(sha256.New, MyHMACkey)
 	mac.Write([]byte(sessionId))
 	// to hex
 	// signedMac := fmt.Sprintf("%x", mac.Sum(nil))
@@ -144,7 +176,7 @@ func paresToken(ss string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	mac := hmac.New(sha256.New, []byte(MyHMACkey))
+	mac := hmac.New(sha256.New, MyHMACkey)
 	mac.Write([]byte(xs[1]))
 	if hmac.Equal([]byte(signedMac), mac.Sum(nil)) {
 		return xs[1], nil
