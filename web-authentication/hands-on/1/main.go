@@ -41,11 +41,22 @@ func greet(w http.ResponseWriter, r *http.Request) {
 	</head>
 	<body>
 	<h1>IF THERE IS ANY ERROR: ` + errMsg + `</h1>
+	<div>
+	<h1> REGISTER </h1>
 	<form action="/register" method="post">
 		<input type="email" name="emailForm"/>
 		<input type="password" name="passwordForm"/>
 		<input type="submit" name="register"/>
 	</form>
+	</div>
+	<div>
+	<h1> LOGIN IN <h1>
+	<form action="/login" method="post">
+		<input type="email" name="emailForm"/>
+		<input type="password" name="passwordForm"/>
+		<input type="submit" name="Login"/>
+	</form>
+	</div>
 	</body>
 	</html>`
 	io.WriteString(w, html)
@@ -86,38 +97,19 @@ func login(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%#v", u)
 		if err != nil {
 			errorMsg := url.QueryEscape("User Not find")
-			http.Redirect(w, r, "/login?errormsg="+errorMsg, http.StatusSeeOther)
+			http.Redirect(w, r, "/?errormsg="+errorMsg, http.StatusSeeOther)
 			return
 		}
 		err = bcrypt.CompareHashAndPassword(u.Password, []byte(userPassword))
 		if err != nil {
 			errorMsg := url.QueryEscape("Username or Password error")
-			http.Redirect(w, r, "/login?errormsg="+errorMsg, http.StatusSeeOther)
+			http.Redirect(w, r, "/?errormsg="+errorMsg, http.StatusSeeOther)
 			return
 		}
 		fmt.Fprintf(w, "Login %s", u.Email)
 		return
 	}
-	errMsg := r.FormValue("errormsg")
-
-	html := `<!DOCTYPE html>
-	<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>Web Example</title>
-	</head>
-	<body>
-	<h1>IF THERE IS ANY ERROR: ` + errMsg + `</h1>
-	<form action="/login" method="post">
-		<input type="email" name="emailForm"/>
-		<input type="password" name="passwordForm"/>
-		<input type="submit" name="Login"/>
-	</form>
-	</body>
-	</html>`
-	io.WriteString(w, html)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 func main() {
 
